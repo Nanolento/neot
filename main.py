@@ -67,35 +67,6 @@ def handle_input(state, editor: Editor):
                                                key_ch)
                 cur_x_diff += 1
                 editor.screen.dirty_lines.add(editor.screen.cur_y)
-            case "delete-forward":
-                y_pos = editor.screen.buff.cur_y
-                current_line = editor.screen.buff.lines[y_pos]
-                if editor.screen.buff.cur_x == len(current_line) and y_pos < len(editor.screen.buff) - 1:
-                    next_line = editor.screen.buff.lines[y_pos+1]
-                    del editor.screen.buff.lines[y_pos+1]
-                    editor.screen.buff.lines[y_pos] += next_line
-                    editor.screen.dirty_lines.update(range(editor.screen.cur_y, editor.screen.edit_height))
-                elif len(editor.screen.buff.lines[y_pos]) > 0:
-                    editor.screen.buff.delete_char(editor.screen.buff.cur_x, y_pos)
-                    editor.screen.dirty_lines.add(editor.screen.cur_y)
-            case "delete-backward":
-                if editor.screen.buff.cur_x > 0:
-                    cur_x_diff -= 1
-                    editor.screen.buff.delete_char(editor.screen.buff.cur_x-1, editor.screen.buff.cur_y)
-                    editor.screen.dirty_lines.add(editor.screen.cur_y)
-                elif editor.screen.buff.cur_x == 0 and editor.screen.buff.cur_y > 0:
-                    # delete newline
-                    y_pos = editor.screen.buff.cur_y
-                    current_line = editor.screen.buff.lines[y_pos]
-                    editor.screen.buff.lines[y_pos-1] += current_line
-                    del editor.screen.buff.lines[y_pos]
-                    cur_y_diff -= 1
-                    cur_x_diff = len(editor.screen.buff.lines[y_pos-1]) - \
-                        len(current_line) - editor.screen.buff.cur_x
-                    if editor.screen.scroll_y + editor.screen.edit_height >= len(editor.screen.buff):
-                        editor.screen.dirty_lines.update(range(editor.screen.edit_height))
-                        editor.screen.dirty_lines.update(range(max(0, editor.screen.cur_y-1),
-                                                               editor.screen.edit_height))
             case "save-file":
                 # save file
                 result, result_msg = editor.screen.buff.save()
@@ -138,6 +109,8 @@ def register_basic_commands(cmd_reg: command.CommandRegistry):
 
     # Deletion commands
     cmd_reg.register(command.delete_line_cmd)
+    cmd_reg.register(command.delete_forward_cmd)
+    cmd_reg.register(command.delete_backward_cmd)
 
         
 def main_loop(stdscr, file_path, state):
