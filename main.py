@@ -67,13 +67,6 @@ def handle_input(state, editor: Editor):
                                                key_ch)
                 cur_x_diff += 1
                 editor.screen.dirty_lines.add(editor.screen.cur_y)
-            case "save-file":
-                # save file
-                result, result_msg = editor.screen.buff.save()
-                if result:
-                    editor.screen.draw_status_message(result_msg, tone="message")
-                else:
-                    editor.screen.draw_status_message(result_msg, tone="auto")
             case "open-file":
                 # open a new file
                 editor.screen.draw_status_message("Opening files not implemented until prompt is done!", tone="warning")
@@ -111,6 +104,9 @@ def register_basic_commands(cmd_reg: command.CommandRegistry):
     cmd_reg.register(command.delete_line_cmd)
     cmd_reg.register(command.delete_forward_cmd)
     cmd_reg.register(command.delete_backward_cmd)
+
+    # Save command
+    cmd_reg.register(command.save_file_cmd)
 
         
 def main_loop(stdscr, file_path, state):

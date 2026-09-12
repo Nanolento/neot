@@ -141,3 +141,15 @@ def delete_backward(editor):
 delete_line_cmd = Command("delete-line", delete_line)
 delete_forward_cmd = Command("delete-forward", delete_forward)
 delete_backward_cmd = Command("delete-backward", delete_backward)
+
+# save file
+
+def save_file(editor):
+    # save file
+    result, result_msg = editor.screen.buff.save()
+    if result:
+        editor.screen.draw_status_message(result_msg, tone="message")
+    else:
+        editor.screen.draw_status_message(result_msg, tone="auto")
+
+save_file_cmd = Command("save-file", save_file)
