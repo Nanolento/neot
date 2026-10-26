@@ -131,15 +131,22 @@ def main_loop(stdscr, file_path, state):
 
 
 def main():
+    # Windows check. ncurses does not work well on Windows if you do not
+    # have curses and even then it still is buggy and works unexpectedly.
+    # Therefore, for now, we do not support Windows!
+    if os.name == 'nt':
+        print("neot does not support Windows, due to ncurses not being supported\n"
+              "and different behavior by Windows in the terminal which neot cannot\n"
+              "yet account for. I apologize but in the future, since I do use Windows\n"
+              "sometimes, I might add support with some caveats later.\n"
+              "Just note neot's main platform is and will remain Linux.")
+        exit(2)
+    
     state = State()
     file_path = None
     if len(sys.argv) == 2:
-        if sys.argv[1] == "!debug_key!":
-            print("Enabled key_debug mode")
-            state.filename = "!DEBUG_KEY!"
-        else:
-            file_path = sys.argv[1]
-            state.filename = os.path.basename(file_path)
+        file_path = sys.argv[1]
+        state.filename = os.path.basename(file_path)
 
     curses.wrapper(main_loop, file_path, state)
 
