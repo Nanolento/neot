@@ -61,29 +61,10 @@ def handle_input(state, editor: Editor):
     if resolved_command and command_str == "insert-char":
         # For 'insert-char', pass the key char along as argument.
         editor.command_registry.execute(command_str, editor, arg=key_ch)
-    elif editor.command_registry.resolve(command_str):
+    elif resolved_command:
         editor.command_registry.execute(command_str, editor)
     else:
-        match command_str:
-            # case "insert-char":
-            #     # currently not replacable. will figure out new architecture for this later
-            #     editor.screen.buff.insert_char(editor.screen.buff.cur_x, editor.screen.buff.cur_y,
-            #                                    key_ch)
-            #     cur_x_diff += 1
-            #     editor.screen.dirty_lines.add(editor.screen.cur_y)
-            case "open-file":
-                # open a new file
-                editor.screen.draw_status_message("Opening files not implemented until prompt is done!", tone="warning")
-            case "prompt":
-                value = editor.screen.prompt("Enter a value:")
-                editor.screen.draw_status_message(f"You said this {value}", tone="message")
-            case "quit":
-                state.ending = True
-            case _:
-                pass  # do nothing
-        if cur_x_diff != 0 or cur_y_diff != 0:
-            # Move logical cursor and visual cursor together
-            editor.screen.move_cursor(cur_x_diff, cur_y_diff, relative=True)
+        editor.screen.draw_status_message(f"No such command '{command_str}'.")
 
     if len(editor.screen.dirty_lines) > 0:
         editor.screen.draw_screen()
