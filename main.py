@@ -57,16 +57,20 @@ def handle_input(state, editor: Editor):
 
     # Bit by bit, replace the below match-case with the new command system, check if the
     # command is registered already, otherwise simply use the match-case to figure it out.
-    if editor.command_registry.resolve(command_str):
+    resolved_command = editor.command_registry.resolve(command_str)
+    if resolved_command and command_str == "insert-char":
+        # For 'insert-char', pass the key char along as argument.
+        editor.command_registry.execute(command_str, editor, arg=key_ch)
+    elif editor.command_registry.resolve(command_str):
         editor.command_registry.execute(command_str, editor)
     else:
         match command_str:
-            case "insert-char":
-                # currently not replacable. will figure out new architecture for this later
-                editor.screen.buff.insert_char(editor.screen.buff.cur_x, editor.screen.buff.cur_y,
-                                               key_ch)
-                cur_x_diff += 1
-                editor.screen.dirty_lines.add(editor.screen.cur_y)
+            # case "insert-char":
+            #     # currently not replacable. will figure out new architecture for this later
+            #     editor.screen.buff.insert_char(editor.screen.buff.cur_x, editor.screen.buff.cur_y,
+            #                                    key_ch)
+            #     cur_x_diff += 1
+            #     editor.screen.dirty_lines.add(editor.screen.cur_y)
             case "open-file":
                 # open a new file
                 editor.screen.draw_status_message("Opening files not implemented until prompt is done!", tone="warning")
@@ -99,6 +103,7 @@ def register_basic_commands(cmd_reg: command.CommandRegistry):
     # Insert commands
     cmd_reg.register(command.insert_tab_cmd)
     cmd_reg.register(command.insert_newline_cmd)
+    cmd_reg.register(command.insert_char_cmd)
 
     # Deletion commands
     cmd_reg.register(command.delete_line_cmd)

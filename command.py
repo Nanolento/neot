@@ -5,12 +5,20 @@ TAB_WIDTH = 4
 class Command:
     name: str
 
-    def __init__(self, name, function):
+    def __init__(self, name: str, function, has_argument=False):
         self.name = name
         self.function = function
+        self.has_argument = has_argument
 
-    def execute(self, editor):
-        self.function(editor)
+    def execute(self, editor, arg=None):
+        if arg and self.has_argument:
+            self.function(editor, arg)
+        elif self.has_argument:
+            raise Exception("Cannot run command that needs argument without an argument.")
+        elif not self.has_argument and arg:
+            raise Exception("Unexpected argument for command that does not need an argument.")
+        else:
+            self.function(editor)
 
 
 class CommandRegistry:
@@ -35,7 +43,7 @@ class CommandRegistry:
         else:
             return False
 
-    def execute(self, name, editor):
+    def execute(self, name, editor, arg=None):
         """
         Execute a command from the registry by name.
         By design, commands can NOT have arguments as they are
@@ -44,7 +52,9 @@ class CommandRegistry:
         Provide the editor context to be used with the command.
         """
         cmd = self.resolve(name)
-        if cmd:
+        if cmd and cmd.has_argument:
+            cmd.execute(editor, arg)
+        elif cmd:
             cmd.execute(editor)
         else:
             raise Exception(f"Cannot execute command {name}: Does not exist!")
@@ -85,8 +95,17 @@ def insert_newline(editor):
                                            editor.screen.edit_height))
     editor.screen.move_cursor(cur_x_diff, 1)
 
+def insert_char(editor, c):
+    editor.screen.buff.insert_char(editor.screen.buff.cur_x,
+                                   editor.screen.buff.cur_y,
+                                   c)
+    cur_x_diff = 1
+    editor.screen.dirty_lines.add(editor.screen.cur_y)
+    editor.screen.move_cursor(cur_x_diff, 0)
+
 insert_tab_cmd = Command("insert-tab", insert_tab)
 insert_newline_cmd = Command("insert-newline", insert_newline)
+insert_char_cmd = Command("insert-char", insert_char, has_argument=True)
 
 # Deletion commands
 
