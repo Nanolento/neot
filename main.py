@@ -29,23 +29,23 @@ def create_prompt(stdscr, x, y, width, message):
 
 
 def handle_input(state, editor: Editor):
-    cur_x_diff = 0
-    cur_y_diff = 0
-
+    # get ncurses char.
     key_ch = editor.screen.curses_screen.get_wch()
+    # turn this char into a keybind string.
     key_str = get_keybind(key_ch, editor.screen.curses_screen)
 
     if key_str == "RESIZE":
         editor.screen.handle_resize()
         return
-    
+
+    # Check keybindings for a command for this keybind.
     command_str = resolve_keybind(key_str)
     if not command_str:
         editor.screen.draw_status_message(f"Unbound key '{key_str}'.")
         return
 
-    # Bit by bit, replace the below match-case with the new command system, check if the
-    # command is registered already, otherwise simply use the match-case to figure it out.
+    # Look up the command in the command registry, and if found,
+    # execute the command.
     resolved_command = editor.command_registry.resolve(command_str)
     if resolved_command and command_str == "insert-char":
         # For 'insert-char', pass the key char along as argument.
@@ -55,6 +55,7 @@ def handle_input(state, editor: Editor):
     else:
         editor.screen.draw_status_message(f"No such command '{command_str}'.")
 
+    # Redraw the screen's dirty lines if there are any.
     if len(editor.screen.dirty_lines) > 0:
         editor.screen.draw_screen()
 
@@ -88,17 +89,21 @@ def register_basic_commands(cmd_reg: 'command.CommandRegistry'):
 
         
 def main_loop(stdscr, file_path, state):
+    # Set up curses
     curses.use_default_colors()
     curses.raw()
     stdscr.clear()
+    # Set up editor dimensions
     editor_width = curses.COLS
     editor_height = curses.LINES
+    # TODO: check this code as it defines the screen twice, but once with a file.
     if file_path:
         file = File(file_path)
         screen = Screen(0, 0, editor_width, editor_height, stdscr, file=file)
     else:
         screen = Screen(0, 0, editor_width, editor_height, stdscr)
     screen.draw_screen(redraw=True)
+    # Create editor state instance.
     editor = Editor(editor_width, editor_height, screen)
     # This is there so the initial "Loaded in file" message can appear
     if not screen.message_shown:
@@ -110,19 +115,21 @@ def main_loop(stdscr, file_path, state):
     # Register commands
     register_basic_commands(editor.command_registry)
 
-    screen.draw_status_message(f"Hello this is neot, the object id is {id(editor)}!")
     while True:
+        # Disable processing of ctrl+{c,z} etc.
         curses.raw()
         # check if we need to quit.
         if editor.mode == EditorMode.EXIT:
-            screen.draw_status_message("exiting.")
             return
 
         handle_input(state, editor)
         if screen.message_shown:
+            # Remove status message after one loop iteration.
             screen.message_shown = False
         else:
+            # Draw the status line only when no message is there.
             screen.draw_status()
+        # After all the drawing, put the cursor back where it belongs.
         screen.put_terminal_cursor()
 
 
@@ -137,7 +144,8 @@ def main():
               "sometimes, I might add support with some caveats later.\n"
               "Just note neot's main platform is and will remain Linux.")
         exit(2)
-    
+
+    # TODO: Remove this 'state' object!
     state = State()
     file_path = None
     if len(sys.argv) == 2:
