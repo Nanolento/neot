@@ -56,8 +56,16 @@ class Screen:
         self.width = curses.COLS
         self.height = curses.LINES
         self.edit_height = self.height - 1
+
+        # Prevent cursor out of bounds
+        if (self.cur_x >= self.width or
+            self.cur_y >= self.edit_height):
+            # By moving the cursor, the editor triggers scrolling
+            # causing the terminal cursor to automatically be back
+            # in bounds.
+            self.move_cursor(0, 0, relative=True)
+        
         self.draw_screen(redraw=True)
-        self.draw_status_message("Terminal resize detected and adjusted.")
 
     def draw_status_message(self, message, tone="auto"):
         """
