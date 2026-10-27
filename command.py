@@ -178,6 +178,5 @@ save_file_cmd = Command("save-file", save_file)
 def quit_app(editor):
     # Tell the editor to quit by going into "EXIT" mode.
     editor.mode = EditorMode.EXIT
-    editor.screen.draw_status_message(f"quitting editor {id(editor)}.")
 
 quit_cmd = Command("quit", quit_app)
