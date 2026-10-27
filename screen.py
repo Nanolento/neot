@@ -37,6 +37,9 @@ class Screen:
         # Prompt value
         curses.init_pair(4, curses.COLOR_WHITE, 22)
 
+        # Status line color
+        curses.init_pair(5, 11, curses.COLOR_BLUE)
+
         # self = passing ourselves as a screen, so buffer can raise messages
         if file:
             self.buff = Buffer(self, file=file)
@@ -117,12 +120,19 @@ class Screen:
         status_str = f"{filename} | " + \
             f"L{self.buff.cur_y+1} " + \
             f"C{self.buff.cur_x}"
-        self._draw_line(status_str, self.height - 1, color="invert",
-                        screen_space=True)
+        # draw background
+        self.curses_screen.hline(self.height - 1, 0, ' ', self.width - 1, curses.color_pair(5))
+        
+        self._draw_line(status_str, self.height - 1, color="status",
+                        screen_space=True, clear=False)
         version_str = "neot INDEV"
-        self.curses_screen.addstr(self.height - 1,
-                                  self.width - len(version_str) - 1,
-                                  version_str, curses.A_REVERSE)
+        try:
+            self.curses_screen.addstr(self.height - 1,
+                                      self.width - len(version_str),
+                                      version_str, curses.color_pair(5))
+        except curses.error:
+            # Ignore curses exception for drawing to bottom-right corner.
+            pass
 
     def _cursor_wrap_text(self, wanted_x, wanted_y):
         """
@@ -252,7 +262,7 @@ class Screen:
         self.dirty_lines = set()
         self.curses_screen.refresh()
 
-    def _draw_line(self, line, screen_y, color="normal", screen_space=False, start_x=0):
+    def _draw_line(self, line, screen_y, color="normal", screen_space=False, start_x=0, clear=True):
         """
         Draw a text line on the screen.
         screen_space: if True, ignore screen scrolling when rendering,
@@ -260,7 +270,8 @@ class Screen:
         """
         cur_x = start_x
         self.curses_screen.move(screen_y, start_x)
-        self.curses_screen.clrtoeol()
+        if clear:
+            self.curses_screen.clrtoeol()
         if not screen_space:
             chars_to_draw = line.rstrip()[self.scroll_x:]
         else:
@@ -289,6 +300,9 @@ class Screen:
                     elif color == "promptv":
                         self.curses_screen.addch(screen_y, cur_x,
                                                  char, curses.color_pair(4))
+                    elif color == "status":
+                        self.curses_screen.addch(screen_y, cur_x,
+                                                 char, curses.color_pair(5))
                     else:
                         self.curses_screen.addch(screen_y, cur_x,
                                                  char)
