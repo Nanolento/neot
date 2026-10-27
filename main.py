@@ -6,6 +6,8 @@ import time
 from screen import Screen
 from file import File
 from input import get_keybind, resolve_keybind
+from editor_mode import EditorMode
+from editor import Editor
 import command
 
 TAB_WIDTH = 4
@@ -17,20 +19,6 @@ class State:
         self.filename = "*NEW*"  # only basename, displayed in status line etc.
         self.mode = "normal"  # mode for interpreting input
         self.ending = False  # whether to quit the application yet.
-
-
-# This class contains everything the editor needs to function.
-class Editor:
-    screen: Screen
-    width: int
-    height: int
-    command_registry: command.CommandRegistry
-
-    def __init__(self, width, height, screen):
-        self.screen = screen
-        self.width = width
-        self.height = height
-        self.command_registry = command.CommandRegistry()
 
 
 def create_prompt(stdscr, x, y, width, message):
@@ -54,6 +42,7 @@ def handle_input(state, editor: Editor):
     command_str = resolve_keybind(key_str)
     if not command_str:
         editor.screen.draw_status_message(f"Unbound key '{key_str}'.")
+        return
 
     # Bit by bit, replace the below match-case with the new command system, check if the
     # command is registered already, otherwise simply use the match-case to figure it out.
@@ -70,7 +59,7 @@ def handle_input(state, editor: Editor):
         editor.screen.draw_screen()
 
 
-def register_basic_commands(cmd_reg: command.CommandRegistry):
+def register_basic_commands(cmd_reg: 'command.CommandRegistry'):
     """
     Registers the most basic commands into the command registry.
     Includes things like basic movement and typing.
@@ -93,6 +82,9 @@ def register_basic_commands(cmd_reg: command.CommandRegistry):
 
     # Save command
     cmd_reg.register(command.save_file_cmd)
+
+    # Quit command
+    cmd_reg.register(command.quit_cmd)
 
         
 def main_loop(stdscr, file_path, state):
@@ -117,11 +109,15 @@ def main_loop(stdscr, file_path, state):
 
     # Register commands
     register_basic_commands(editor.command_registry)
-    
+
+    screen.draw_status_message(f"Hello this is neot, the object id is {id(editor)}!")
     while True:
         curses.raw()
-        if state.ending:
+        # check if we need to quit.
+        if editor.mode == EditorMode.EXIT:
+            screen.draw_status_message("exiting.")
             return
+
         handle_input(state, editor)
         if screen.message_shown:
             screen.message_shown = False

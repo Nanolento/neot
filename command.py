@@ -1,5 +1,7 @@
 # This file contains the commands neot uses for its functionality. The default behaviors are programmed here.
 
+from editor_mode import EditorMode
+
 TAB_WIDTH = 4
 
 class Command:
@@ -172,3 +174,10 @@ def save_file(editor):
         editor.screen.draw_status_message(result_msg, tone="auto")
 
 save_file_cmd = Command("save-file", save_file)
+
+def quit_app(editor):
+    # Tell the editor to quit by going into "EXIT" mode.
+    editor.mode = EditorMode.EXIT
+    editor.screen.draw_status_message(f"quitting editor {id(editor)}.")
+
+quit_cmd = Command("quit", quit_app)
